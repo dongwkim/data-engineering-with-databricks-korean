@@ -10,26 +10,27 @@
 -- MAGIC %md <i18n value="cffedc4f-a6a4-4412-8193-46a7a8a6a213"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC # Lab: Migrating a SQL Pipeline to Delta Live Tables
+-- MAGIC # Lab : SQL 파이프라인을 델타 라이브 테이블로 마이그레이션
 -- MAGIC 
--- MAGIC This notebook will be completed by you to implement a DLT pipeline using SQL. 
+-- MAGIC 이 노트북은 SQL을 사용하여 DLT 파이프라인을 구현하기 위해 작성됩니다.
 -- MAGIC 
--- MAGIC It is **not intended** to be executed interactively, but rather to be deployed as a pipeline once you have completed your changes.
+-- MAGIC **의도된** 것은 대화식으로 실행되는 것이 아니라 변경을 완료한 후 파이프라인으로 배포되는 것입니다.
 -- MAGIC 
--- MAGIC To aid in completion of this Notebook, please refer to the <a href="https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-language-ref.html#sql" target="_blank">DLT syntax documentation</a>.
+-- MAGIC 이 노트를 작성하는 데 도움이 되도록 <a href="https://docs.databricks.com/data-engineering/delta-live-tables/delta-live-tables-language-ref.html#sql " target="_blank">DLT 구문 문서</a>를 참고 하세요
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="01e06565-56e7-4581-8833-14bc0db8c281"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Declare Bronze Table
+-- MAGIC ## Bronze Table 선언
 -- MAGIC 
--- MAGIC Declare a bronze table, **`recordings_bronze`**, that ingests JSON data incrementally (using Auto Loader) from the simulated cloud source. The source location is already supplied as an argument; using this value is illustrated in the cell below.
 -- MAGIC 
--- MAGIC As we did previously, include two additional columns:
--- MAGIC * **`receipt_time`** that records a timestamp as returned by **`current_timestamp()`** 
--- MAGIC * **`source_file`** that is obtained by **`input_file_name()`**
+-- MAGIC 시뮬레이션된 클라우드 소스에서 오토 로더를 사용하여 JSON 데이터를 점진적으로 수집하는 브론즈 테이블 **`recordings_bronze`** 를 선언합니다. 소스 위치는 이미 인수로 제공됩니다. 이 값을 사용하는 방법은 아래 셀에 설명되어 있습니다.
+-- MAGIC 
+-- MAGIC 이전에 했던 것처럼 두 개의 추가 컬럼을 포함합니다.
+-- MAGIC * **`current_timestamp()`** 에 의해 반환된 타임스탬프를 기록하는 **`receipt_time`**
+-- MAGIC * **`input_file_name()`** 에 의해 획득된 **`source_file`**
 
 -- COMMAND ----------
 
@@ -45,16 +46,16 @@ AS SELECT <FILL-IN>
 -- MAGIC 
 -- MAGIC ### PII File
 -- MAGIC 
--- MAGIC Using a similar CTAS syntax, create a live **table** into the CSV data found in the *healthcare/patient* dataset.
+-- MAGIC 유사한 CTAS 구문을 사용하여 *healthcare/patient* 데이터 세트에 있는 CSV 데이터에 라이브 **테이블**을 만듭니다.
 -- MAGIC 
--- MAGIC To properly configure Auto Loader for this source, you will need to specify the following additional parameters:
+-- MAGIC 이 소스에 대해 자동 로더를 올바르게 구성하려면 다음 추가 매개변수를 지정해야 합니다.
 -- MAGIC 
 -- MAGIC | option | value |
 -- MAGIC | --- | --- |
 -- MAGIC | **`header`** | **`true`** |
 -- MAGIC | **`cloudFiles.inferColumnTypes`** | **`true`** |
 -- MAGIC 
--- MAGIC <img src="https://files.training.databricks.com/images/icon_note_24.png"/> Auto Loader configurations for CSV can be found <a href="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader-csv.html" target="_blank">here</a>.
+-- MAGIC <img src="https://files.training.databricks.com/images/icon_note_24.png"/> CSV 를 위한 AutoLoader 매개변수 구성은 <a href="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader-csv.html" target="_blank">여기</a> 를 참고하세요.
 
 -- COMMAND ----------
 
@@ -68,21 +69,21 @@ AS SELECT *
 -- MAGIC %md <i18n value="3573b6a4-233a-4f23-a002-aab072eb5096"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Declare Silver Tables
+-- MAGIC ## Silver Tables 선언
 -- MAGIC 
--- MAGIC Our silver table, **`recordings_enriched`**, will consist of the following fields:
+-- MAGIC 실버 테이블 **`recordings_enriched`** 는 다음 필드로 구성됩니다:
 -- MAGIC 
 -- MAGIC | Field | Type |
 -- MAGIC | --- | --- |
 -- MAGIC | **`device_id`** | **`INTEGER`** |
 -- MAGIC | **`mrn`** | **`LONG`** |
 -- MAGIC | **`heartrate`** | **`DOUBLE`** |
--- MAGIC | **`time`** | **`TIMESTAMP`** (example provided below) |
+-- MAGIC | **`time`** | **`TIMESTAMP`** (아래에 예시 제공) |
 -- MAGIC | **`name`** | **`STRING`** |
 -- MAGIC 
--- MAGIC This query should also enrich the data through an inner join with the **`pii`** table on the common **`mrn`** field to obtain the name.
+-- MAGIC 또한 이 쿼리는 환자의 이름을 얻기 위해 공통 **`mrn`** 필드의 **`pii`** 테이블과 내부 조인을 통해 데이터를 보강해야 합니다.
 -- MAGIC 
--- MAGIC Implement quality control by applying a constraint to drop records with an invalid **`heartrate`** (that is, not greater than zero).
+-- MAGIC 잘못된 **`심박수`**(즉, 0보다 크지 않음)가 있는 레코드를 삭제하는 제약을 적용하여 품질 관리를 구현합니다.
 
 -- COMMAND ----------
 
@@ -104,14 +105,14 @@ AS SELECT
 -- MAGIC 
 -- MAGIC ## Gold Table
 -- MAGIC 
--- MAGIC Create a gold table, **`daily_patient_avg`**, that aggregates **`recordings_enriched`** by **`mrn`**, **`name`**, and **`date`** and delivers the following columns:
+-- MAGIC **`daily_patient_avg`** 골드 테이블 생성,  **`mrn`**, **`name`**, **`date`**  컬럼을 기준으로  **`recordings_enriched`** 를 집계
 -- MAGIC 
 -- MAGIC | Column name | Value |
 -- MAGIC | --- | --- |
--- MAGIC | **`mrn`** | **`mrn`** from source |
--- MAGIC | **`name`** | **`name`** from source |
--- MAGIC | **`avg_heartrate`** | Average **`heartrate`** from the grouping |
--- MAGIC | **`date`** | Date extracted from **`time`** |
+-- MAGIC | **`mrn`** | 소스 테이블에서 **`mrn`** |
+-- MAGIC | **`name`** | 소스 테이블에서 **`name`**  |
+-- MAGIC | **`avg_heartrate`** |  **`heartrate`** 의 평균 |
+-- MAGIC | **`date`** |  **`time`** 에서 날짜 추출 |
 
 -- COMMAND ----------
 
