@@ -1,10 +1,10 @@
-# Data Engineering with Databricks [English]
+# Data Engineering with Databricks [Korean ]
 
-This repository contains the resources students need to follow along with the instructor teaching this course, in addition to the various labs and their solutions.
+해당 리포지토리에는 다양한 실습 랩 및 솔루션외에도 학생들이 이 과정을 가르치는 강사와 함께 따라야 하는 리소스가 포함되어 있습니다.
 
-There are two ways to get started (with and w/o Databricks Repos). Your instructor will indicate which procedure you should use and when.
+시작하는 방법에는 두 가지가 있습니다(Databricks Repos 포함 및 제외). 데이터브릭스 팀에서는 언제 어떤 절차를 사용해야 하는지 알려줄 것입니다.
 
-For your convenience, both procedures are documented for you at  
+귀하의 편의를 위해 두 절차가 모두 문서화되어 있습니다. 
 <a href="https://www.databricks.training/step-by-step/importing-courseware-from-github" target="_blank">https&#58;//www.databricks.training/step-by-step/importing-courseware-from-github</a>.<br/>
 
 **Special Note:** This course is published in multiple languages via different repos.
