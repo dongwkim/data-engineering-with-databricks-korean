@@ -9,30 +9,27 @@
 
 -- MAGIC %md <i18n value="b9ee68dd-a00f-45a6-9c7a-9c59a41fef6a"/>
 -- MAGIC 
+-- MAGIC 지난 수업에서는 이 노트북을 델타 라이브 테이블(DLT) 파이프라인으로 수행하는 과정을 살펴보았습니다. 이제 델타 라이브 테이블에서 사용하는 구문을 더 잘 이해하기 위해 이 노트북의 내용을 살펴보겠습니다.
 -- MAGIC 
--- MAGIC # SQL for Delta Live Tables
+-- MAGIC 이 Notebook은 SQL을 사용하여 기본적으로 Databricks 작업 영역에 로드되는 Databricks 제공 예제 데이터 세트를 기반으로 간단한 Multi Hop 아키텍처를 함께 구현하는 델타 라이브 테이블을 선언합니다.
 -- MAGIC 
--- MAGIC In the last lesson, we walked through the process of scheduling this notebook as a Delta Live Table (DLT) pipeline. Now we'll explore the contents of this notebook to better understand the syntax used by Delta Live Tables.
+-- MAGIC 가장 간단하게 DLT SQL을 기존 CTAS 문을 약간 수정한 것으로 생각할 수 있습니다. DLT 테이블과 뷰는 항상 **`LIVE`** 키워드 앞에 옵니다.
 -- MAGIC 
--- MAGIC This notebook uses SQL to declare Delta Live Tables that together implement a simple multi-hop architecture based on a Databricks-provided example dataset loaded by default into Databricks workspaces.
--- MAGIC 
--- MAGIC At its simplest, you can think of DLT SQL as a slight modification to traditional CTAS statements. DLT tables and views will always be preceded by the **`LIVE`** keyword.
--- MAGIC 
--- MAGIC ## Learning Objectives
--- MAGIC By the end of this lesson, you should be able to:
--- MAGIC * Define tables and views with Delta Live Tables
--- MAGIC * Use SQL to incrementally ingest raw data with Auto Loader
--- MAGIC * Perform incremental reads on Delta tables with SQL
--- MAGIC * Update code and redeploy a pipeline
+-- MAGIC ## 학습 목표
+-- MAGIC 이 단원을 마치면 다음을 수행할 수 있습니다.
+-- MAGIC * 델타 라이브 테이블로 테이블 및 보기 정의
+-- MAGIC * SQL을 사용하여 자동 로더로 원시 데이터를 점진적으로 수집
+-- MAGIC * SQL을 사용하여 Delta 테이블에서 증분 읽기 수행
+-- MAGIC * 코드 업데이트 및 파이프라인 재배포
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="1cc1fe77-a235-40dd-beb5-bacc94425b96"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Declare Bronze Layer Tables
+-- MAGIC ## 브론즈 레이어 테이블 선언하기
 -- MAGIC 
--- MAGIC Below we declare two tables implementing the bronze layer. This represents data in its rawest form, but captured in a format that can be retained indefinitely and queried with the performance and benefits that Delta Lake has to offer.
+-- MAGIC 아래에서 브론즈 레이어를 구현하는 두 개의 테이블을 선언합니다. 이것은 가장 원시적인 형태의 데이터를 나타내지만, 무기한 보존할 수 있는 형식으로 캡처되고 Delta Lake가 제공해야 하는 성능과 이점을 가지고 쿼리됩니다.
 
 -- COMMAND ----------
 
@@ -41,14 +38,14 @@
 -- MAGIC 
 -- MAGIC ### sales_orders_raw
 -- MAGIC 
--- MAGIC **`sales_orders_raw`** ingests JSON data incrementally from our **retail-org/sales_orders** dataset.
+-- MAGIC **`sales_orders_raw`** 는 **retail-org/sales_orders** 데이터 세트에서 점진적으로 JSON 데이터를 수집합니다.
 -- MAGIC 
--- MAGIC Incremental processing via <a herf="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html" target="_blank">Auto Loader</a> (which uses the same processing model as Structured Streaming), requires the addition of the **`STREAMING`** keyword in the declaration as seen below. The **`cloud_files()`** method enables Auto Loader to be used natively with SQL. This method takes the following positional parameters:
--- MAGIC * The source location, as mentioned above
--- MAGIC * The source data format, which is JSON in this case
--- MAGIC * An arbitrarily sized array of optional reader options. In this case, we set **`cloudFiles.inferColumnTypes`** to **`true`**
+-- MAGIC <a herf="https://docs.databricks.com/spark/latest/structured-streaming/auto-loader.html" target="_blank">오토 로더</a>(Spark Structured Streaming 과 동일 처리 모델 사용) 를 사용한 증분 처리는 아래와 같이 선언에 **`STREAMING`** 키워드를 추가해야 합니다. **`cloud_files()`** 메서드를 사용하면 오토 로더를 기본적으로 SQL과 함께 사용할 수 있습니다. 이 메서드는 다음 파라메터를 사용합니다.
+-- MAGIC * 위에서 언급한 소스 위치
+-- MAGIC * 소스 데이터 형식(해당 실습의 경우 JSON)
+-- MAGIC * 배열 형태의 읽기 옵션. 이 경우 **`cloudFiles.inferColumnTypes`** 를 **`true`** 로 설정합니다.
 -- MAGIC 
--- MAGIC The following declaration also demonstrates the declaration of additional table metadata (a comment and properties in this case) that would be visible to anyone exploring the data catalog.
+-- MAGIC 아래 선언은 또한 데이터 카탈로그를 탐색하는 모든 사용자에게 표시되는 추가 테이블 메타데이터(이 경우 주석 및 속성)의 선언을 보여줍니다.
 
 -- COMMAND ----------
 
@@ -62,10 +59,9 @@ AS SELECT * FROM cloud_files("${datasets_path}/retail-org/sales_orders", "json",
 -- MAGIC 
 -- MAGIC 
 -- MAGIC ### customers
+-- MAGIC **`customers`** 는 **retail-org/customers** 에 있는 CSV 고객 데이터를 제공합니다.
 -- MAGIC 
--- MAGIC **`customers`** presents CSV customer data found in **retail-org/customers**.
--- MAGIC 
--- MAGIC This table will soon be used in a join operation to look up customer data based on sales records.
+-- MAGIC 이 테이블은 조인 작업에서 곧 사용되어 판매 기록을 기반으로 고객 데이터를 조회합니다.
 
 -- COMMAND ----------
 
@@ -79,9 +75,9 @@ AS SELECT * FROM cloud_files("${datasets_path}/retail-org/customers/", "csv");
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Declare Silver Layer Tables
+-- MAGIC ## 실버 레이어 테이블 선언하기
 -- MAGIC 
--- MAGIC Now we declare tables implementing the silver layer. This layer represents a refined copy of data from the bronze layer, with the intention of optimizing downstream applications. At this level we apply operations like data cleansing and enrichment.
+-- MAGIC 이제 실버 레이어를 구현하는 테이블을 선언합니다. 이 레이어는 다운스트림 애플리케이션을 최적화하기 위해 브론즈 레이어의 정제된 데이터 복사본을 나타냅니다. 이 수준에서는 데이터 정리 및 보강과 같은 작업을 적용합니다.
 
 -- COMMAND ----------
 
@@ -90,26 +86,26 @@ AS SELECT * FROM cloud_files("${datasets_path}/retail-org/customers/", "csv");
 -- MAGIC 
 -- MAGIC ### sales_orders_cleaned
 -- MAGIC 
--- MAGIC Here we declare our first silver table, which enriches the sales transaction data with customer information in addition to implementing quality control by rejecting records with a null order number.
+-- MAGIC 여기서 우리는 null 주문 번호가 있는 레코드를 거부하여 품질 관리를 구현하는 것 외에도 고객 정보로 판매 거래 데이터를 풍부하게 하는 첫 번째 실버 테이블을 선언합니다.
 -- MAGIC 
--- MAGIC This declaration introduces a number of new concepts.
+-- MAGIC 이 선언은 새로운 개념을 소개합니다.
 -- MAGIC 
--- MAGIC #### Quality Control
+-- MAGIC #### 데이터 품질 관리
 -- MAGIC 
--- MAGIC The **`CONSTRAINT`** keyword introduces quality control. Similar in function to a traditional **`WHERE`** clause, **`CONSTRAINT`** integrates with DLT, enabling it to collect metrics on constraint violations. Constraints provide an optional **`ON VIOLATION`** clause, specifying an action to take on records that violate the constraint. The three modes currently supported by DLT include:
+-- MAGIC **`CONSTRAINT`** 키워드는 품질 관리를 소개합니다. 기존 **`WHERE`** 절과 기능이 유사한 **`CONSTRAINT`** 는 DLT와 통합되어 제약 조건 위반에 대한 메트릭을 수집할 수 있습니다. 제약 조건은 선택적 **`ON VIOLATION`** 절을 제공하여 제약 조건을 위반하는 레코드에 대해 수행할 작업을 지정합니다. 현재 DLT에서 지원하는 세 가지 모드는 다음과 같습니다.
 -- MAGIC 
 -- MAGIC | **`ON VIOLATION`** | Behavior |
 -- MAGIC | --- | --- |
--- MAGIC | **`FAIL UPDATE`** | Pipeline failure when constraint is violated |
--- MAGIC | **`DROP ROW`** | Discard records that violate constraints |
--- MAGIC | Omitted | Records violating constraints will be included (but violations will be reported in metrics) |
+-- MAGIC | **`FAIL UPDATE`** | 제약 조건이 위반되었을 경우 파이프라인 실패 |
+-- MAGIC | **`DROP ROW`** | 제약 조건이 위반되었을 경우 레코드 drop |
+-- MAGIC | **`Omitted`** | 제약 조건을 위반하는 레코드가 포함됩니다(그러나 위반 사항은 메트릭에 보고됨). |
 -- MAGIC 
--- MAGIC #### References to DLT Tables and Views
--- MAGIC References to other DLT tables and views will always include the **`live.`** prefix. A target database name will automatically be substituted at runtime, allowing for easily migration of pipelines between DEV/QA/PROD environments.
+-- MAGIC #### DLT 테이블 및 뷰에 대한 참조
+-- MAGIC 다른 DLT 테이블 및 뷰에 대한 참조에는 항상 **`live.`** 접두사가 포함됩니다. 대상 데이터베이스 이름은 런타임 시 자동으로 대체되므로 DEV/QA/PROD 환경 간에 파이프라인을 쉽게 마이그레이션할 수 있습니다.
 -- MAGIC 
--- MAGIC #### References to Streaming Tables
+-- MAGIC #### 스트리밍 테이블에 대한 참조 
 -- MAGIC 
--- MAGIC References to streaming DLT tables use the **`STREAM()`**, supplying the table name as an argument.
+-- MAGIC 스트리밍 DLT 테이블에 대한 참조는 **`STREAM()`** 을 사용하여 테이블 이름을 인수로 제공합니다.
 
 -- COMMAND ----------
 
@@ -132,9 +128,9 @@ AS
 -- MAGIC %md <i18n value="ae062501-5a39-4183-976a-53662619d516"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Declare Gold Table
+-- MAGIC ## 골드 테이블 선언
 -- MAGIC 
--- MAGIC At the most refined level of the architecture, we declare a table delivering an aggregation with business value, in this case a collection of sales order data based in a specific region. In aggregating, the report generates counts and totals of orders by date and customer.
+-- MAGIC 아키텍처의 가장 정제된 수준에서 우리는 비즈니스 가치가 있는 집계를 제공하는 테이블을 선언합니다. 이 경우에는 특정 지역을 기반으로 하는 판매 주문 데이터 모음입니다. 집계 시 보고서는 날짜 및 고객별로 주문 수와 합계를 생성합니다
 
 -- COMMAND ----------
 
@@ -157,28 +153,29 @@ AS
 -- MAGIC 
 -- MAGIC ## Explore Results
 -- MAGIC 
--- MAGIC Explore the DAG (Directed Acyclic Graph) representing the entities involved in the pipeline and the relationships between them. Click on each to view a summary, which includes:
--- MAGIC * Run status
--- MAGIC * Metadata summary
--- MAGIC * Schema
--- MAGIC * Data quality metrics
+-- MAGIC 파이프라인에 관련된 엔터티와 엔터티 간의 관계를 나타내는 DAG(Directed Acyclic Graph)를 탐색합니다. 다음을 포함하는 요약을 보려면 각각을 클릭하십시오.
+-- MAGIC * 실행 상태
+-- MAGIC * 메타데이터 요약
+-- MAGIC * 스키마
+-- MAGIC * 데이터 품질 지표
 -- MAGIC 
--- MAGIC Refer to this <a href="$./DE 8.3 - Pipeline Results" target="_blank">companion notebook</a> to inspect tables and logs.
+-- MAGIC 
+-- MAGIC 테이블 및 로그를 검사하기 위해서 <a href="$./DE 8.1.3 - Pipeline Results" target="_blank">companion notebook</a> 을 참고하세요
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="77c262ce-1b24-4ca2-a931-e481927d1739"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Update Pipeline
+-- MAGIC ## 파이프라인 업데이트
 -- MAGIC 
--- MAGIC Uncomment the following cell to declare another gold table. Similar to the previous gold table declaration, this filters for the **`city`** of Chicago. 
+-- MAGIC 다른 골드 테이블을 선언하려면 다음 셀의 주석을 해제하십시오. 이전 골드 테이블 선언과 유사하게 이 필터는 시카고의 **`city`** 를 필터링합니다.
 -- MAGIC 
--- MAGIC Re-run your pipeline to examine the updated results. 
+-- MAGIC 파이프라인을 다시 실행하여 업데이트된 결과를 검사합니다.
 -- MAGIC 
--- MAGIC Does it run as expected? 
+-- MAGIC 예상대로 DAG 이 그려지며 실행됩니까?
 -- MAGIC 
--- MAGIC Can you identify any issues?
+-- MAGIC 문제를 식별할 수 있습니까?
 
 -- COMMAND ----------
 
