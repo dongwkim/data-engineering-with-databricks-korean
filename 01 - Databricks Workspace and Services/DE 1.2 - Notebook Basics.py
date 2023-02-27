@@ -44,6 +44,10 @@
 
 # COMMAND ----------
 
+
+
+# COMMAND ----------
+
 # MAGIC %md <i18n value="9f021e76-692f-4df7-8e80-fec41d03c719"/>
 # MAGIC 
 # MAGIC ## 노트북 기초
@@ -61,6 +65,18 @@
 # COMMAND ----------
 
 print("I'm running Python!")
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+
+
+# COMMAND ----------
+
+
 
 # COMMAND ----------
 

@@ -11,13 +11,13 @@
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC # Manipulating Tables with Delta Lake
+-- MAGIC # Delta Lake 테입블 조작하기
 -- MAGIC 
--- MAGIC This notebook provides a hands-on review of some of the basic functionality of Delta Lake.
+-- MAGIC 이 노트북은 Delta Lake의 기본 기능 중 일부에 대한 실습을 제공합니다.
 -- MAGIC 
--- MAGIC ## Learning Objectives
--- MAGIC By the end of this lab, you should be able to:
--- MAGIC - Execute standard operations to create and manipulate Delta Lake tables, including:
+-- MAGIC ## 학습 목표
+-- MAGIC 이 실습을 마치면 다음을 수행할 수 있습니다.
+-- MAGIC - 다음을 포함하여 Delta Lake 테이블을 만들고 조작하는 표준 작업을 실행합니다.
 -- MAGIC   - **`CREATE TABLE`**
 -- MAGIC   - **`INSERT INTO`**
 -- MAGIC   - **`SELECT FROM`**
@@ -32,8 +32,8 @@
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Setup
--- MAGIC Run the following script to setup necessary variables and clear out past runs of this notebook. Note that re-executing this cell will allow you to start the lab over.
+-- MAGIC ## 셋업
+-- MAGIC 다음 스크립트를 실행하여 필요한 변수를 설정하고 이 노트북의 과거 실행을 지웁니다. 이 셀을 다시 실행하면 실습을 다시 시작할 수 있습니다.
 
 -- COMMAND ----------
 
@@ -45,15 +45,15 @@
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Create a Table
+-- MAGIC ## Table 생성
 -- MAGIC 
--- MAGIC In this notebook, we'll be creating a table to track our bean collection.
+-- MAGIC 이 노트북에서 bean 컬렉션을 추적하는 테이블을 만들 것입니다.
 -- MAGIC 
--- MAGIC Use the cell below to create a managed Delta Lake table named **`beans`**.
+-- MAGIC 아래 셀을 사용하여 **`beans`** 라는 관리형 Delta Lake 테이블을 만듭니다.
 -- MAGIC 
--- MAGIC Provide the following schema:
+-- MAGIC 아래 스키마가 주어집니다:
 -- MAGIC 
--- MAGIC | Field Name | Field type |
+-- MAGIC | 필드 이름 | 필드 타입 |
 -- MAGIC | --- | --- |
 -- MAGIC | name | STRING |
 -- MAGIC | color | STRING |
@@ -71,23 +71,23 @@
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC **NOTE**: We'll use Python to run checks occasionally throughout the lab. The following cell will return as error with a message on what needs to change if you have not followed instructions. No output from cell execution means that you have completed this step.
+-- MAGIC **NOTE**: 실습 전체에서 Python을 사용하여 사용자의 수행에 대한 검사를 실행합니다.다음 셀은 지침을 따르지 않은 경우 변경해야 할 사항에 대한 메시지와 함께 오류로 반환됩니다. 셀 실행 결과가 출력되지 않으면 이 단계가 완료되었음을 의미합니다.
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.table("beans"), "Table named `beans` does not exist"
--- MAGIC assert spark.table("beans").columns == ["name", "color", "grams", "delicious"], "Please name the columns in the order provided above"
--- MAGIC assert spark.table("beans").dtypes == [("name", "string"), ("color", "string"), ("grams", "float"), ("delicious", "boolean")], "Please make sure the column types are identical to those provided above"
+-- MAGIC assert spark.table("beans"), "`beans` 로 명명된 테이블이 없습니다"
+-- MAGIC assert spark.table("beans").columns == ["name", "color", "grams", "delicious"], "컬럼의 이름 및 순서가 위에서 명시된 순서인지 확인하세요"
+-- MAGIC assert spark.table("beans").dtypes == [("name", "string"), ("color", "string"), ("grams", "float"), ("delicious", "boolean")], "컬럼 유형이 위에 제공된 것과 동일한지 확인하십시오."
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="89004ef0-db16-474b-8cce-eff85c225a65"/>
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Insert Data
+-- MAGIC ## 데이터 삽입
 -- MAGIC 
--- MAGIC Run the following cell to insert three rows into the table.
+-- MAGIC 다음 셀을 실행하여 테이블에 세 개의 행을 삽입합니다.
 
 -- COMMAND ----------
 
@@ -102,7 +102,7 @@ INSERT INTO beans VALUES
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Manually review the table contents to ensure data was written as expected.
+-- MAGIC 테이블 내용을 수동으로 검토하여 데이터가 예상대로 작성되었는지 확인하십시오.
 
 -- COMMAND ----------
 
@@ -115,7 +115,7 @@ INSERT INTO beans VALUES
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Insert the additional records provided below. Make sure you execute this as a single transaction.
+-- MAGIC 아래 제공된 추가 레코드를 삽입하십시오. 이것을 단일 트랜잭션으로 실행해야 합니다.
 
 -- COMMAND ----------
 
@@ -131,14 +131,14 @@ INSERT INTO beans VALUES
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Run the cell below to confirm the data is in the proper state.
+-- MAGIC 아래 셀을 실행하여 데이터가 적절한 상태인지 확인하십시오.
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.table("beans").count() == 6, "The table should have 6 records"
--- MAGIC assert spark.conf.get("spark.databricks.delta.lastCommitVersionInSession") == "2", "Only 3 commits should have been made to the table"
--- MAGIC assert set(row["name"] for row in spark.table("beans").select("name").collect()) == {'beanbag chair', 'black', 'green', 'jelly', 'lentils', 'pinto'}, "Make sure you have not modified the data provided"
+-- MAGIC assert spark.table("beans").count() == 6, "테이블에는 6개의 레코드가 있어야 합니다."
+-- MAGIC assert spark.conf.get("spark.databricks.delta.lastCommitVersionInSession") == "2", "테이블에 커밋이 3개만 있어야 합니다."
+-- MAGIC assert set(row["name"] for row in spark.table("beans").select("name").collect()) == {'beanbag chair', 'black', 'green', 'jelly', 'lentils', 'pinto'}, "제공된 데이터를 수정하지 않았는지 확인하십시오"
 
 -- COMMAND ----------
 
@@ -146,11 +146,11 @@ INSERT INTO beans VALUES
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Update Records
+-- MAGIC ## 레코드 업데이트
 -- MAGIC 
--- MAGIC A friend is reviewing your inventory of beans. After much debate, you agree that jelly beans are delicious.
+-- MAGIC 친구가 bean 재고를 검토하고 있습니다. 많은 토론 끝에 당신은 jelly bean 이 맛있다는 데 동의합니다.
 -- MAGIC 
--- MAGIC Run the following cell to update this record.
+-- MAGIC 다음 셀을 실행하여 이 레코드를 업데이트하십시오.
 
 -- COMMAND ----------
 
@@ -164,9 +164,9 @@ WHERE name = "jelly"
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC You realize that you've accidentally entered the weight of your pinto beans incorrectly.
+-- MAGIC 실수로 `pinto` bean의 무게를 잘못 입력했음을 알게 됩니다.
 -- MAGIC 
--- MAGIC Update the **`grams`** column for this record to the correct weight of 1500.
+-- MAGIC 이 레코드의 **`grams`** 열을 올바른 무게인 1500으로 업데이트합니다.
 
 -- COMMAND ----------
 
@@ -179,16 +179,16 @@ WHERE name = "jelly"
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Run the cell below to confirm this has completed properly.
+-- MAGIC 아래 셀을 실행하여 제대로 완료되었는지 확인합니다.
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.table("beans").filter("name='pinto'").count() == 1, "There should only be 1 entry for pinto beans"
+-- MAGIC assert spark.table("beans").filter("name='pinto'").count() == 1, "pinto bean 에 대한 항목은 1개만 존재 해야 합니다."
 -- MAGIC row = spark.table("beans").filter("name='pinto'").first()
--- MAGIC assert row["color"] == "brown", "The pinto bean should be labeled as the color brown"
--- MAGIC assert row["grams"] == 1500, "Make sure you correctly specified the `grams` as 1500"
--- MAGIC assert row["delicious"] == True, "The pinto bean is a delicious bean"
+-- MAGIC assert row["color"] == "brown", "pinto bean은 brown 으로 표시되어야 합니다."
+-- MAGIC assert row["grams"] == 1500, "`grams` 을 1500 으로 입력했는지 확인하세요"
+-- MAGIC assert row["delicious"] == True, "pinto bean 은 delicious bean 입니다"
 
 -- COMMAND ----------
 
@@ -196,11 +196,11 @@ WHERE name = "jelly"
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Delete Records
+-- MAGIC ## 레코드 삭제
 -- MAGIC 
--- MAGIC You've decided that you only want to keep track of delicious beans.
+-- MAGIC 맛있는 bean만 추적하기로 결정했습니다.
 -- MAGIC 
--- MAGIC Execute a query to drop all beans that are not delicious.
+-- MAGIC 맛있지 않은 모든 bean을 삭제하는 쿼리를 실행합니다.
 
 -- COMMAND ----------
 
@@ -213,13 +213,13 @@ WHERE name = "jelly"
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Run the following cell to confirm this operation was successful.
+-- MAGIC 다음 셀을 실행하여 이 작업이 성공했는지 확인합니다.
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.table("beans").filter("delicious=true").count() == 5, "There should be 5 delicious beans in your table"
--- MAGIC assert spark.table("beans").filter("name='beanbag chair'").count() == 0, "Make sure your logic deletes non-delicious beans"
+-- MAGIC assert spark.table("beans").filter("delicious=true").count() == 5, "5개의 delicious bean 이 테이블에 존재해야 합니다."
+-- MAGIC assert spark.table("beans").filter("name='beanbag chair'").count() == 0, "로직이 non-delicious beans 을 삭제 했는지 확인하세요."
 
 -- COMMAND ----------
 
@@ -227,9 +227,9 @@ WHERE name = "jelly"
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Using Merge to Upsert Records
+-- MAGIC ## 레코드를 Upsert 하기 위해 Merge문 사용
 -- MAGIC 
--- MAGIC Your friend gives you some new beans. The cell below registers these as a temporary view.
+-- MAGIC 당신의 친구로 부터 새로운 bean을 받았습니다. 아래 셀은 이를 temp view로 등록합니다.
 
 -- COMMAND ----------
 
@@ -245,14 +245,12 @@ SELECT * FROM new_beans
 
 -- MAGIC %md <i18n value="58d50e50-65f1-403b-b74e-1143cde49356"/>
 -- MAGIC 
+-- MAGIC 아래 셀에서 위에서 생성한 view를 사용하여 **`beans`** 테이블에 새 레코드를 하나의 트랜잭션으로 업데이트하고 삽입하는 병합 문을 작성합니다.
 -- MAGIC 
--- MAGIC 
--- MAGIC In the cell below, use the above view to write a merge statement to update and insert new records to your **`beans`** table as one transaction.
--- MAGIC 
--- MAGIC Make sure your logic:
--- MAGIC - Matches beans by name **and** color
--- MAGIC - Updates existing beans by adding the new weight to the existing weight
--- MAGIC - Inserts new beans only if they are delicious
+-- MAGIC 아래 로직을 확인하십시오.
+-- MAGIC - 이름 **AND** 색상으로 bean을 일치시킵니다.
+-- MAGIC - 기존 무게에 새 무게를 추가하여 기존 bean을 업데이트합니다.
+-- MAGIC - 새 bean은 delicious가 true 일 때만 삽입
 
 -- COMMAND ----------
 
@@ -265,7 +263,7 @@ SELECT * FROM new_beans
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Run the cell below to check your work.
+-- MAGIC 아래 셀을 실행하여 작업을 확인하십시오.
 
 -- COMMAND ----------
 
@@ -273,13 +271,13 @@ SELECT * FROM new_beans
 -- MAGIC import pyspark.sql.functions as F
 -- MAGIC last_version = spark.sql("DESCRIBE HISTORY beans").orderBy(F.col("version").desc()).first()
 -- MAGIC 
--- MAGIC assert last_version["operation"] == "MERGE", "Transaction should be completed as a merge"
+-- MAGIC assert last_version["operation"] == "MERGE", "트랜잭션은 MERGE로 수행되어야 합니다."
 -- MAGIC 
 -- MAGIC metrics = last_version["operationMetrics"]
--- MAGIC assert metrics["numOutputRows"] == "5", "Make sure you only insert delicious beans"
--- MAGIC assert metrics["numTargetRowsUpdated"] == "1", "Make sure you match on name and color"
--- MAGIC assert metrics["numTargetRowsInserted"] == "2", "Make sure you insert newly collected beans"
--- MAGIC assert metrics["numTargetRowsDeleted"] == "0", "No rows should be deleted by this operation"
+-- MAGIC assert metrics["numOutputRows"] == "5", "delicious bean 만 삽입했는지 확인하세요."
+-- MAGIC assert metrics["numTargetRowsUpdated"] == "1", "name 과 color 필드로 데이터를 match 했는지 확인하세요."
+-- MAGIC assert metrics["numTargetRowsInserted"] == "2", "새로 수집된 bean만 삽입했는지 확인하세요."
+-- MAGIC assert metrics["numTargetRowsDeleted"] == "0", "어떤 rows 도 삭제되어서는 안됩니다."
 
 -- COMMAND ----------
 
@@ -287,13 +285,13 @@ SELECT * FROM new_beans
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Dropping Tables
+-- MAGIC ## 테이블 DROP
 -- MAGIC 
--- MAGIC When working with managed Delta Lake tables, dropping a table results in permanently deleting access to the table and all underlying data files.
+-- MAGIC 관리형 Delta Lake 테이블로 작업할 때 테이블을 삭제하면 테이블 및 모든 기본 데이터 파일에 대한 액세스 권한이 영구적으로 삭제됩니다.
 -- MAGIC 
--- MAGIC **NOTE**: Later in the course, we'll learn about external tables, which approach Delta Lake tables as a collection of files and have different persistence guarantees.
+-- MAGIC **참고**: 이 과정의 뒷부분에서 Delta Lake 테이블을 파일 모음으로 접근하고 다른 영구 지속성을 보장하는 external table에 대해 배우게 됩니다.
 -- MAGIC 
--- MAGIC In the cell below, write a query to drop the **`beans`** table.
+-- MAGIC 아래 셀에 **`beans`** 테이블을 삭제하는 쿼리를 작성하세요.
 
 -- COMMAND ----------
 
@@ -306,12 +304,12 @@ SELECT * FROM new_beans
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Run the cell below to assert that your table no longer exists.
+-- MAGIC 아래 셀을 실행하여 테이블이 더 이상 존재하지 않는지 확인 하십시오
 
 -- COMMAND ----------
 
 -- MAGIC %python
--- MAGIC assert spark.sql("SHOW TABLES LIKE 'beans'").collect() == [], "Confirm that you have dropped the `beans` table from your current database"
+-- MAGIC assert spark.sql("SHOW TABLES LIKE 'beans'").collect() == [], "현재 데이터베이스에서 `beans` 테이블을 삭제했는지 확인하십시오."
 
 -- COMMAND ----------
 
@@ -321,16 +319,14 @@ SELECT * FROM new_beans
 -- MAGIC 
 -- MAGIC ## Wrapping Up
 -- MAGIC 
--- MAGIC By completing this lab, you should now feel comfortable:
--- MAGIC * Completing standard Delta Lake table creation and data manipulation commands
+-- MAGIC 이 실습을 완료하면 이제 아래 항목에 대해서 편안하게 느낄 수 있습니다.
+-- MAGIC * 표준 Delta Lake 테이블 생성 및 데이터 조작 명령 완료
 
 -- COMMAND ----------
 
 -- MAGIC %md <i18n value="d59f9828-9b13-4e0e-ae98-7e852cd32198"/>
 -- MAGIC 
--- MAGIC 
--- MAGIC 
--- MAGIC Run the following cell to delete the tables and files associated with this lesson.
+-- MAGIC 다음 셀을 실행하여 이 학습과 연관된 테이블 및 파일을 삭제하십시오.
 
 -- COMMAND ----------
 

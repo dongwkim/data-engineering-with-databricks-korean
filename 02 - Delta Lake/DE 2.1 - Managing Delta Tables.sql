@@ -10,22 +10,21 @@
 -- MAGIC %md <i18n value="7aa87ebc-24dd-4b39-bb02-7c59fa083a14"/>
 -- MAGIC 
 -- MAGIC 
+-- MAGIC # Delta Tables 관리하기
 -- MAGIC 
--- MAGIC # Managing Delta Tables
+-- MAGIC SQL의 특징을 알고 있다면 데이터 레이크하우스에서 효과적으로 작업하는 데 필요한 많은 지식을 이미 가지고 있는 것입니다.
 -- MAGIC 
--- MAGIC If you know any flavor of SQL, you already have much of the knowledge you'll need to work effectively in the data lakehouse.
+-- MAGIC 이 노트북에서는 Databricks에서 SQL을 사용하여 데이터 및 테이블의 기본 조작을 살펴봅니다.
 -- MAGIC 
--- MAGIC In this notebook, we'll explore basic manipulation of data and tables with SQL on Databricks.
+-- MAGIC Delta Lake는 Databricks로 만든 모든 테이블의 기본 형식입니다. Databricks에서 SQL 문을 실행했다면 이미 Delta Lake로 작업하고 있을 확율이 높습니다
 -- MAGIC 
--- MAGIC Note that Delta Lake is the default format for all tables created with Databricks; if you've been running SQL statements on Databricks, you're likely already working with Delta Lake.
--- MAGIC 
--- MAGIC ## Learning Objectives
--- MAGIC By the end of this lesson, you should be able to:
--- MAGIC * Create Delta Lake tables
--- MAGIC * Query data from Delta Lake tables
--- MAGIC * Insert, update, and delete records in Delta Lake tables
--- MAGIC * Write upsert statements with Delta Lake
--- MAGIC * Drop Delta Lake tables
+-- MAGIC ## 학습 목표
+-- MAGIC 이 단원을 마치면 다음을 수행할 수 있습니다.
+-- MAGIC * Delta Lake 테이블 생성
+-- MAGIC * Delta Lake 테이블의 쿼리 데이터
+-- MAGIC * Delta Lake 테이블에서 레코드 삽입, 업데이트 및 삭제
+-- MAGIC * Delta Lake로 upsert 문 작성
+-- MAGIC * Delta Lake 테이블 삭제하기
 
 -- COMMAND ----------
 
@@ -33,7 +32,7 @@
 -- MAGIC 
 -- MAGIC 
 -- MAGIC ## Run Setup
--- MAGIC The first thing we're going to do is run a setup script. It will define a username, userhome, and database that is scoped to each user.
+-- MAGIC 가장 먼저 할 일은 설정 스크립트를 실행하는 것입니다. 각 사용자로 범위가 지정된 사용자 이름, userhome 및 데이터베이스를 정의합니다.
 
 -- COMMAND ----------
 
@@ -47,14 +46,15 @@
 -- MAGIC 
 -- MAGIC ## Creating a Delta Table
 -- MAGIC 
--- MAGIC There's not much code you need to write to create a table with Delta Lake. There are a number of ways to create Delta Lake tables that we'll see throughout the course. We'll begin with one of the easiest methods: registering an empty Delta Lake table.
+-- MAGIC Delta Lake로 테이블을 생성하기 위해 작성해야 하는 코드가 많지 않습니다. 과정 전반에 걸쳐 보게 될 Delta Lake 테이블을 만드는 방법에는 여러 가지가 있습니다. 가장 쉬운 방법 중 하나인 깡통 Delta Lake 테이블 등록부터 시작하겠습니다.
 -- MAGIC 
--- MAGIC We need: 
--- MAGIC - A **`CREATE TABLE`** statement
--- MAGIC - A table name (below we use **`students`**)
--- MAGIC - A schema
 -- MAGIC 
--- MAGIC **NOTE:** In Databricks Runtime 8.0 and above, Delta Lake is the default format and you don’t need **`USING DELTA`**.
+-- MAGIC 필요한 것: 
+-- MAGIC - **`CREATE TABLE`** 문장
+-- MAGIC - 테이블 이름 (아래 예제에서 **`students`** 사용)
+-- MAGIC - 스키마
+-- MAGIC 
+-- MAGIC **NOTE:** Databricks Runtime 8.0 이상에서는 Delta Lake가 기본 형식이며 **`USING DELTA`**가 필요하지 않습니다.
 
 -- COMMAND ----------
 
@@ -65,11 +65,9 @@ CREATE TABLE students
 
 -- MAGIC %md <i18n value="a00174f3-bbcd-4ee3-af0e-b8d4ccb58481"/>
 -- MAGIC 
+-- MAGIC 돌아가서 해당 셀을 다시 실행하려고 하면 오류가 발생합니다! 이것은 예상된 것입니다. 테이블이 이미 존재하기 때문에 오류가 발생합니다.
 -- MAGIC 
--- MAGIC 
--- MAGIC If we try to go back and run that cell again...it will error out! This is expected - because the table exists already, we receive an error.
--- MAGIC 
--- MAGIC We can add in an additional argument, **`IF NOT EXISTS`** which checks if the table exists. This will overcome our error.
+-- MAGIC 테이블이 존재하는지 확인하는 추가 인수 **`IF NOT EXISTS`**를 추가할 수 있습니다. 이것은 오류를 회피할 것 입니다.
 
 -- COMMAND ----------
 
@@ -82,10 +80,10 @@ CREATE TABLE IF NOT EXISTS students
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Inserting Data
--- MAGIC Most often, data will be inserted to tables as the result of a query from another source.
+-- MAGIC ## 데이터 삽입
+-- MAGIC 대부분의 경우 데이터는 다른 소스의 쿼리 결과로 테이블에 삽입됩니다.
 -- MAGIC 
--- MAGIC However, just as in standard SQL, you can also insert values directly, as shown here.
+-- MAGIC 그러나 표준 SQL에서와 마찬가지로 여기에 표시된 대로 값을 직접 삽입할 수도 있습니다.
 
 -- COMMAND ----------
 
@@ -99,7 +97,7 @@ INSERT INTO students VALUES (3, "Elia", 3.3);
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC In the cell above, we completed three separate **`INSERT`** statements. Each of these is processed as a separate transaction with its own ACID guarantees. Most frequently, we'll insert many records in a single transaction.
+-- MAGIC 위의 셀에서 세 개의 별도 **`INSERT`** 문을 완료했습니다. 이들 각각은 자체 ACID 보장과 함께 별도의 트랜잭션으로 처리됩니다. 대부분의 경우 아래와 같이 단일 트랜잭션에 많은 레코드를 삽입합니다.
 
 -- COMMAND ----------
 
@@ -115,7 +113,7 @@ VALUES
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Note that Databricks doesn't have a **`COMMIT`** keyword; transactions run as soon as they're executed, and commit as they succeed.
+-- MAGIC Databricks에는 **`COMMIT`** 키워드가 없습니다. 트랜잭션은 실행되는 즉시 실행되고 성공하면 커밋됩니다.
 
 -- COMMAND ----------
 
@@ -123,9 +121,9 @@ VALUES
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Querying a Delta Table
+-- MAGIC ## Delta Table 조회하기
 -- MAGIC 
--- MAGIC You probably won't be surprised that querying a Delta Lake table is as easy as using a standard **`SELECT`** statement.
+-- MAGIC Delta Lake 테이블을 조회하는 것이 표준 **`SELECT`** 문을 사용하는 것만큼 쉽습니다.
 
 -- COMMAND ----------
 
@@ -137,9 +135,9 @@ SELECT * FROM students
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC What may surprise you is that Delta Lake guarantees that any read against a table will **always** return the most recent version of the table, and that you'll never encounter a state of deadlock due to ongoing operations.
+-- MAGIC 놀라운 점은 Delta Lake 테이블에 대한 모든 읽기가 **항상** 가장 최신 버전의 테이블을 반환하고 진행 중인 작업으로 인해 교착 상태가 발생하지 않도록 보장한다는 것입니다.
 -- MAGIC 
--- MAGIC To repeat: table reads can never conflict with other operations, and the newest version of your data is immediately available to all clients that can query your lakehouse. Because all transaction information is stored in cloud object storage alongside your data files, concurrent reads on Delta Lake tables is limited only by the hard limits of object storage on cloud vendors. (**NOTE**: It's not infinite, but it's at least thousands of reads per second.)
+-- MAGIC **요약**: 테이블 읽기는 다른 작업과 충돌할 수 없으며 최신 버전의 데이터는 레이크하우스를 쿼리할 수 있는 모든 클라이언트에서 즉시 사용할 수 있습니다. 모든 트랜잭션 정보는 데이터 파일과 함께 클라우드 개체 저장소에 저장되기 때문에 Delta Lake 테이블에 대한 동시 읽기는 클라우드 공급업체의 개체 저장소에 대한 엄격한 요청 수 제한에 의해서만 제한됩니다. (**참고**: 무한하지는 않지만 초당 최소 수천 번의 읽기입니다.)
 
 -- COMMAND ----------
 
@@ -147,11 +145,11 @@ SELECT * FROM students
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Updating Records
+-- MAGIC ## 레코드 업데이트
 -- MAGIC 
--- MAGIC Updating records provides atomic guarantees as well: we perform a snapshot read of the current version of our table, find all fields that match our **`WHERE`** clause, and then apply the changes as described.
+-- MAGIC 레코드 업데이트는 원자성(Atomic) 보장도 제공합니다. 테이블의 현재 버전에 대한 스냅샷 읽기를 수행하고 **`WHERE`** 절과 일치하는 모든 필드를 찾은 다음 설명된 대로 변경 사항을 적용합니다.
 -- MAGIC 
--- MAGIC Below, we find all students that have a name starting with the letter **T** and add 1 to the number in their **`value`** column.
+-- MAGIC 아래에서 이름이 문자 **T**로 시작하는 모든 학생을 찾고 **`value`** 열의 숫자에 1을 더합니다.
 
 -- COMMAND ----------
 
@@ -165,7 +163,7 @@ WHERE name LIKE "T%"
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Query the table again to see these changes applied.
+-- MAGIC 변경 사항이 적용되었는지 확인하기위해서 테이블을 다시 쿼리하십시오.
 
 -- COMMAND ----------
 
@@ -177,11 +175,11 @@ SELECT * FROM students
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Deleting Records
+-- MAGIC ## 레코드 삭제
 -- MAGIC 
--- MAGIC Deletes are also atomic, so there's no risk of only partially succeeding when removing data from your data lakehouse.
+-- MAGIC 삭제도 원자성을 가지므로 데이터 레이크하우스에서 데이터를 제거할 때 부분적으로만 성공할 위험이 없습니다.
 -- MAGIC 
--- MAGIC A **`DELETE`** statement can remove one or many records, but will always result in a single transaction.
+-- MAGIC **`DELETE`** 문은 하나 이상의 레코드를 제거할 수 있지만 항상 단일 트랜잭션이 발생합니다.
 
 -- COMMAND ----------
 
@@ -194,13 +192,13 @@ WHERE value > 6
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Using Merge
+-- MAGIC ## Merge 문 사용
 -- MAGIC 
--- MAGIC Some SQL systems have the concept of an upsert, which allows updates, inserts, and other data manipulations to be run as a single command.
+-- MAGIC 일부 SQL 시스템에는 업데이트, 삽입 및 기타 데이터 조작을 단일 명령으로 실행할 수 있는 upsert 개념이 있습니다.
 -- MAGIC 
--- MAGIC Databricks uses the **`MERGE`** keyword to perform this operation.
+-- MAGIC Databricks는 **`MERGE`** 키워드를 사용하여 이 작업을 수행합니다.
 -- MAGIC 
--- MAGIC Consider the following temporary view, which contains 4 records that might be output by a Change Data Capture (CDC) feed.
+-- MAGIC CDC(변경 데이터 캡처) 피드에서 출력할 수 있는 4개의 레코드가 포함된 다음 Temp View 가 있다고 가정해 봅시다
 
 -- COMMAND ----------
 
@@ -216,15 +214,13 @@ SELECT * FROM updates;
 
 -- MAGIC %md <i18n value="6fe009d5-513f-4b93-994f-1ae9a0f30a80"/>
 -- MAGIC 
+-- MAGIC 지금까지 본 구문을 사용하여 유형별로 이 보기에서 필터링하여 각각 레코드를 삽입, 업데이트 및 삭제하는 3개의 문을 작성할 수 있습니다. 그러나 이렇게 하면 3개의 개별 트랜잭션이 발생합니다. 이러한 트랜잭션 중 하나라도 실패하면 데이터가 유효하지 않은 상태로 남을 수 있습니다.
 -- MAGIC 
+-- MAGIC 대신 이러한 작업을 단일 원자 트랜잭션으로 결합하여 3가지 유형의 변경 사항을 함께 적용합니다.
 -- MAGIC 
--- MAGIC Using the syntax we've seen so far, we could filter from this view by type to write 3 statements, one each to insert, update, and delete records. But this would result in 3 separate transactions; if any of these transactions were to fail, it might leave our data in an invalid state.
+-- MAGIC **`MERGE`** 문에는 일치(ON 절)시킬 필드가 하나 이상 있어야 하며 각 **`WHEN MATCHED`** 또는 **`WHEN NOT MATCHED`** 절에는 원하는 만큼 추가 조건문이 있을 수 있습니다.
 -- MAGIC 
--- MAGIC Instead, we combine these actions into a single atomic transaction, applying all 3 types of changes together.
--- MAGIC 
--- MAGIC **`MERGE`** statements must have at least one field to match on, and each **`WHEN MATCHED`** or **`WHEN NOT MATCHED`** clause can have any number of additional conditional statements.
--- MAGIC 
--- MAGIC Here, we match on our **`id`** field and then filter on the **`type`** field to appropriately update, delete, or insert our records.
+-- MAGIC 여기에서 **`id`** 필드를 일치시킨 다음 **`type`** 필드를 필터링하여 레코드를 적절하게 업데이트, 삭제 또는 삽입합니다.
 
 -- COMMAND ----------
 
@@ -242,11 +238,9 @@ WHEN NOT MATCHED AND u.type = "insert"
 
 -- MAGIC %md <i18n value="77cee0a0-f94b-4016-a20b-08e4857d13db"/>
 -- MAGIC 
+-- MAGIC 3개의 레코드만 **`MERGE`** 문의 영향을 받았습니다. 업데이트 테이블의 레코드 중 하나는 학생 테이블에 일치하는 **`id`** 가 없지만 **`update`** 로 표시되었습니다. 사용자 지정 논리에 따라 이 레코드를 삽입하는 대신 무시했습니다.
 -- MAGIC 
--- MAGIC 
--- MAGIC Note that only 3 records were impacted by our **`MERGE`** statement; one of the records in our updates table did not have a matching **`id`** in the students table but was marked as an **`update`**. Based on our custom logic, we ignored this record rather than inserting it. 
--- MAGIC 
--- MAGIC How would you modify the above statement to include unmatched records marked **`update`** in the final **`INSERT`** clause?
+-- MAGIC 마지막 **`INSERT`** 절에 **`update`** 로 표시된 일치하지 않는 레코드를 포함하도록 위의 명령문을 어떻게 수정하시겠습니까?
 
 -- COMMAND ----------
 
@@ -254,11 +248,11 @@ WHEN NOT MATCHED AND u.type = "insert"
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC ## Dropping a Table
+-- MAGIC ## 테이블 드롭
 -- MAGIC 
--- MAGIC Assuming that you have proper permissions on the target table, you can permanently delete data in the lakehouse using a **`DROP TABLE`** command.
+-- MAGIC 대상 테이블에 대한 적절한 권한이 있다고 가정하면 **`DROP TABLE`** 명령을 사용하여 레이크하우스의 데이터를 영구적으로 삭제할 수 있습니다.
 -- MAGIC 
--- MAGIC **NOTE**: Later in the course, we'll discuss Table Access Control Lists (ACLs) and default permissions. In a properly configured lakehouse, users should **not** be able to delete production tables.
+-- MAGIC **NOTE**: 이 과정의 뒷부분에서 테이블 ACL(액세스 제어 목록) 및 기본 권한에 대해 설명합니다. 적절하게 구성된 레이크하우스에서 사용자는 프로덕션 테이블을 삭제할 수 **없어야** 합니다.
 
 -- COMMAND ----------
 
@@ -270,7 +264,7 @@ DROP TABLE students
 -- MAGIC 
 -- MAGIC 
 -- MAGIC 
--- MAGIC Run the following cell to delete the tables and files associated with this lesson.
+-- MAGIC 다음 셀을 실행하여 이 학습과 연관된 테이블 및 파일을 삭제하십시오.
 
 -- COMMAND ----------
 
